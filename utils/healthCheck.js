@@ -41,10 +41,15 @@ const checkNodeHealth = async (node, timeout = 5000) => {
       }
     };
   } catch (error) {
+    const errorType = error.code === 'ECONNABORTED' ? 'timeout' : 
+                     error.code === 'ECONNREFUSED' ? 'connection_refused' :
+                     error.code === 'ENOTFOUND' ? 'dns_error' : 'unknown';
+    
     return {
       healthy: false,
       node: node,
-      error: error.message
+      error: error.message,
+      errorType: errorType
     };
   }
 };
