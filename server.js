@@ -26,6 +26,7 @@ app.use(session({
   cookie: {
     secure: process.env.COOKIE_SECURE !== 'false', // Set to 'false' for HTTP access
     httpOnly: true,
+    sameSite: 'lax', // Allows cookies on same-site navigation
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
