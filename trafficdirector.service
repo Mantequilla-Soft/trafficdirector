@@ -1,0 +1,29 @@
+[Unit]
+Description=3Speak Traffic Director API
+Documentation=https://github.com/your-org/trafficdirector
+After=network.target mongod.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/trafficdirector
+Environment=NODE_ENV=production
+EnvironmentFile=/opt/trafficdirector/.env
+ExecStart=/usr/bin/node /opt/trafficdirector/server.js
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/trafficdirector/access.log
+StandardError=append:/var/log/trafficdirector/error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/trafficdirector
+
+# Performance
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - 3Speak Traffic Director</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .add-node-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .add-node-btn:hover {
+            opacity: 0.9;
+        }
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        th {
+            background: #333;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e1e1e1;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover {
+            background: #f9f9f9;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-enabled {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-disabled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        .btn-edit {
+            background: #667eea;
+            color: white;
+        }
+        .btn-toggle {
+            background: #f39c12;
+            color: white;
+        }
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e1e1;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-primary {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .activity-log {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .activity-log h2 {
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .activity-indicator {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .log-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .log-entry {
+            padding: 6px 0;
+            color: #d4d4d4;
+            line-height: 1.6;
+            border-bottom: 1px solid #2d2d2d;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-timestamp {
+            color: #888;
+            margin-right: 10px;
+        }
+        .log-type-request {
+            color: #61afef;
+        }
+        .log-type-admin {
+            color: #e5c07b;
+        }
+        .log-type-error {
+            color: #e06c75;
+        }
+        .log-type-rate-limit {
+            color: #d19a66;
+        }
+        .log-type-health {
+            color: #98c379;
+        }
+        .log-empty {
+            color: #888;
+            text-align: center;
+            padding: 40px;
+            font-style: italic;
+        }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🎯 3Speak Traffic Director - Admin Panel</h1>
+            <a href="/admin/logout" class="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <button class="add-node-btn" onclick="openAddModal()">+ Add New Hot Node</button>
+
+        <% if (nodes.length === 0) { %>
+            <div class="empty-state">
+                <div class="empty-state-icon">📦</div>
+                <h2>No Hot Nodes Yet</h2>
+                <p>Click the "Add New Hot Node" button to create your first node.</p>
+            </div>
+        <% } else { %>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Owner</th>
+                        <th>Name</th>
+                        <th>IP</th>
+                        <th>URL</th>
+                        <th>Status</th>
+                        <th>Last Used</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% nodes.forEach(node => { %>
+                        <tr>
+                            <td><strong><%= node.owner %></strong></td>
+                            <td><%= node.name %></td>
+                            <td><%= node.ip %></td>
+                            <td><%= node.url %></td>
+                            <td>
+                                <span class="status-badge <%= node.enabled ? 'status-enabled' : 'status-disabled' %>">
+                                    <%= node.enabled ? 'Enabled' : 'Disabled' %>
+                                </span>
+                            </td>
+                            <td><%= new Date(node.lastUsed).toLocaleString() %></td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-edit" data-node="<%= encodeURIComponent(JSON.stringify(node)) %>" onclick="openEditModalFromData(this)">Edit</button>
+                                    <button class="btn btn-toggle" data-owner="<%= node.owner %>" data-enabled="<%= node.enabled %>" onclick="toggleNodeFromData(this)">
+                                        <%= node.enabled ? 'Disable' : 'Enable' %>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        <% } %>
+
+        <!-- Real-time Activity Log -->
+        <div class="activity-log">
+            <h2>
+                <span class="activity-indicator"></span>
+                Real-time Activity Log
+            </h2>
+            <div class="log-container" id="activityLogContainer">
+                <div class="log-empty">Waiting for activity...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="nodeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Hot Node</h2>
+            </div>
+            <form id="nodeForm">
+                <input type="hidden" id="nodeId" name="nodeId">
+                <input type="hidden" id="isEdit" name="isEdit" value="false">
+                <input type="hidden" id="originalOwner" name="originalOwner">
+                
+                <div class="form-group">
+                    <label for="owner">Owner *</label>
+                    <input type="text" id="owner" name="owner" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Name *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ip">IP Address *</label>
+                    <input type="text" id="ip" name="ip" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="url">URL *</label>
+                    <input type="text" id="url" name="url" required placeholder="example.3speak.tv">
+                </div>
+                
+                <div class="form-group">
+                    <label for="comments">Comments</label>
+                    <textarea id="comments" name="comments" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="enabled" name="enabled" checked>
+                    <label for="enabled">Enabled (include in round-robin)</label>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Hot Node';
+            document.getElementById('isEdit').value = 'false';
+            document.getElementById('nodeForm').reset();
+            document.getElementById('nodeModal').classList.add('active');
+        }
+
+        function openEditModalFromData(button) {
+            const nodeJson = decodeURIComponent(button.getAttribute('data-node'));
+            const node = JSON.parse(nodeJson);
+            openEditModal(node);
+        }
+
+        function openEditModal(node) {
+            document.getElementById('modalTitle').textContent = 'Edit Hot Node';
+            document.getElementById('isEdit').value = 'true';
+            document.getElementById('nodeId').value = node._id;
+            document.getElementById('originalOwner').value = node.owner;
+            document.getElementById('owner').value = node.owner;
+            document.getElementById('name').value = node.name;
+            document.getElementById('ip').value = node.ip;
+            document.getElementById('url').value = node.url;
+            document.getElementById('comments').value = node.comments || '';
+            document.getElementById('enabled').checked = node.enabled;
+            document.getElementById('nodeModal').classList.add('active');
+        }
+
+        function toggleNodeFromData(button) {
+            const owner = button.getAttribute('data-owner');
+            const currentEnabled = button.getAttribute('data-enabled') === 'true';
+            toggleNode(owner, !currentEnabled);
+        }
+
+        function closeModal() {
+            document.getElementById('nodeModal').classList.remove('active');
+        }
+
+        document.getElementById('nodeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = {
+                owner: formData.get('owner'),
+                name: formData.get('name'),
+                ip: formData.get('ip'),
+                url: formData.get('url'),
+                comments: formData.get('comments'),
+                enabled: formData.get('enabled') === 'on'
+            };
+
+            const isEdit = formData.get('isEdit') === 'true';
+            const ownerForUrl = isEdit ? formData.get('originalOwner') : data.owner;
+            const url = isEdit ? `/admin/api/node/${encodeURIComponent(ownerForUrl)}` : '/admin/api/node';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            console.log('=== Form Submit ===');
+            console.log('Is Edit:', isEdit);
+            console.log('Original Owner:', formData.get('originalOwner'));
+            console.log('New Data:', data);
+            console.log('URL:', url);
+            console.log('Method:', method);
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                console.log('Response Status:', response.status);
+                console.log('Response OK:', response.ok);
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Response Data:', result);
+                    location.reload();
+                } else {
+                    const error = await response.json();
+                    console.error('Error Response:', error);
+                    alert('Error saving node: ' + (error.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                alert('Error: ' + error.message);
+            }
+        });
+
+        async function toggleNode(owner, enabled) {
+            if (confirm(`Are you sure you want to ${enabled ? 'enable' : 'disable'} this node?`)) {
+                try {
+                    const response = await fetch(`/admin/api/node/${encodeURIComponent(owner)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ enabled: enabled })
+                    });
+
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Error updating node');
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('nodeModal').addEventListener('click', (e) => {
+            if (e.target.id === 'nodeModal') {
+                closeModal();
+            }
+        });
+
+        // Socket.IO for real-time activity logs
+        const socket = io();
+        const logContainer = document.getElementById('activityLogContainer');
+        const maxLogs = 100; // Keep last 100 log entries
+
+        socket.on('connect', () => {
+            console.log('Connected to activity log stream');
+        });
+
+        socket.on('activity-log', (logEntry) => {
+            // Remove "waiting for activity" message
+            const emptyMessage = logContainer.querySelector('.log-empty');
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+
+            // Create log entry element
+            const logElement = document.createElement('div');
+            logElement.className = 'log-entry';
+            
+            const emoji = {
+                'request': '🌐',
+                'admin': '⚙️',
+                'error': '⚠️',
+                'rate-limit': '🚫',
+                'health': '💚'
+            }[logEntry.type] || 'ℹ️';
+
+            logElement.innerHTML = `
+                <span class="log-timestamp">[${logEntry.timestamp}]</span>
+                <span class="log-type-${logEntry.type}">${emoji} ${logEntry.message}</span>
+            `;
+
+            // Add to top of log container
+            logContainer.insertBefore(logElement, logContainer.firstChild);
+
+            // Keep only last maxLogs entries
+            while (logContainer.children.length > maxLogs) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+
+            // Auto-scroll if user is at top
+            if (logContainer.scrollTop < 50) {
+                logContainer.scrollTop = 0;
+            }
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from activity log stream');
+        });
+    </script>
+</body>
+</html>
