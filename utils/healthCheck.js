@@ -67,14 +67,26 @@ const filterHealthyNodes = async (nodes) => {
   const healthChecks = nodes.map(node => checkNodeHealth(node));
   const results = await Promise.all(healthChecks);
   
-  const healthyNodes = results
-    .filter(result => result.healthy)
-    .map(result => result.node);
+  const healthyNodes = [];
+  const unhealthyNodes = [];
+
+  results.forEach(result => {
+    if (result.healthy) {
+      healthyNodes.push(result.node);
+    } else {
+      unhealthyNodes.push(result);
+      console.log(`❌ Node unhealthy: ${result.node.name || result.node.url} - ${result.errorType || 'failed'}: ${result.error}`);
+    }
+  });
 
   // Log health check results
   activityLogger.logHealthCheck(nodes.length, healthyNodes.length);
   
   console.log(`✅ ${healthyNodes.length}/${nodes.length} hot nodes healthy`);
+  
+  if (unhealthyNodes.length > 0) {
+    console.log(`⚠️  ${unhealthyNodes.length} node(s) unhealthy`);
+  }
 
   return healthyNodes;
 };
