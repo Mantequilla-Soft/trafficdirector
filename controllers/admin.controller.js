@@ -194,10 +194,24 @@ exports.apiCheckNodeHealth = async (req, res) => {
     const { checkNodeHealth } = require('../utils/healthCheck');
     const result = await checkNodeHealth({ url }, 5000);
 
-    activityLogger.logAdminAction('health-check', url, {
+    // Log to console
+    if (result.healthy) {
+      console.log(`✅ Manual health check: ${url} - Healthy`);
+    } else {
+      console.log(`❌ Manual health check: ${url} - Unhealthy (${result.errorType || 'error'}): ${result.error}`);
+    }
+
+    // Log to activity logger with proper message
+    const statusMsg = result.healthy ? 
+      `Health check PASSED for ${url}` : 
+      `Health check FAILED for ${url}: ${result.errorType || 'error'} - ${result.error}`;
+    
+    activityLogger.logAdminAction('health-check', statusMsg, {
+      url: url,
       healthy: result.healthy,
       details: result.details || {},
-      error: result.error || null
+      error: result.error || null,
+      errorType: result.errorType || null
     });
 
     res.json({
@@ -205,6 +219,7 @@ exports.apiCheckNodeHealth = async (req, res) => {
       healthy: result.healthy,
       details: result.details,
       error: result.error,
+      errorType: result.errorType,
       responseTime: result.responseTime
     });
   } catch (error) {
