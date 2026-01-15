@@ -17,14 +17,12 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Get the current directory (where the script is located)
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-INSTALL_DIR="/opt/trafficdirector"
+INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SERVICE_NAME="trafficdirector"
 LOG_DIR="/var/log/trafficdirector"
 
 echo "📋 Configuration:"
-echo "   Source: $SCRIPT_DIR"
-echo "   Install to: $INSTALL_DIR"
+echo "   Install directory: $INSTALL_DIR"
 echo "   Service: $SERVICE_NAME"
 echo ""
 
@@ -52,15 +50,6 @@ if ! command -v npm &> /dev/null; then
 fi
 echo "✅ npm found: $(npm --version)"
 echo ""
-
-# Create installation directory
-echo "📁 Creating installation directory..."
-mkdir -p $INSTALL_DIR
-
-# Copy files
-echo "📦 Copying application files..."
-rsync -av --exclude='node_modules' --exclude='.git' --exclude='*.log' $SCRIPT_DIR/ $INSTALL_DIR/
-echo "✅ Files copied"
 
 # Install dependencies
 echo "📥 Installing dependencies..."
@@ -102,7 +91,38 @@ echo "✅ Permissions set"
 
 # Install systemd service
 echo "🔧 Installing systemd service..."
-cp $INSTALL_DIR/trafficdirector.service /etc/systemd/system/
+cat > /etc/systemd/system/$SERVICE_NAME.service << EOF
+[Unit]
+Description=3Speak Traffic Director API
+Documentation=https://github.com/Mantequilla-Soft/trafficdirector
+After=network.target mongod.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=$INSTALL_DIR
+Environment=NODE_ENV=production
+EnvironmentFile=$INSTALL_DIR/.env
+ExecStart=/usr/bin/node $INSTALL_DIR/server.js
+Restart=always
+RestartSec=10
+StandardOutput=append:$LOG_DIR/access.log
+StandardError=append:$LOG_DIR/error.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=$LOG_DIR
+
+# Performance
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 systemctl daemon-reload
 echo "✅ Service installed"
 
