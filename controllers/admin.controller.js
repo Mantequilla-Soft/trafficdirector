@@ -12,8 +12,15 @@ exports.login = (req, res) => {
   
   if (password === process.env.ADMIN_PASSWORD) {
     req.session.isAdmin = true;
-    activityLogger.logAdminAction('login', 'system');
-    res.redirect('/admin/dashboard');
+    // Save session before redirect to avoid race condition
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.render('login', { error: 'Login error, please try again' });
+      }
+      activityLogger.logAdminAction('login', 'system');
+      res.redirect('/admin/dashboard');
+    });
   } else {
     res.render('login', { error: 'Invalid password' });
   }
