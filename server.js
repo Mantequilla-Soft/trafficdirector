@@ -13,6 +13,10 @@ const httpServer = createServer(app);
 const io = new Server(httpServer);
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy - REQUIRED when behind nginx/reverse proxy
+// This tells Express to trust X-Forwarded-* headers
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -20,13 +24,15 @@ app.use(express.urlencoded({ extended: true }));
 
 // Session configuration
 app.use(session({
+  name: 'trafficdirector.sid',
   secret: process.env.SESSION_SECRET || 'your-secret-key-change-this',
   resave: false,
   saveUninitialized: false,
+  proxy: true, // Trust the reverse proxy
   cookie: {
-    secure: process.env.COOKIE_SECURE !== 'false', // Set to 'false' for HTTP access
+    secure: 'auto', // Automatically detect HTTPS via trust proxy
     httpOnly: true,
-    sameSite: 'lax', // Allows cookies on same-site navigation
+    sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
