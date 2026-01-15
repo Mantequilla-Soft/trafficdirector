@@ -4,56 +4,61 @@ const activityLogger = require('./activityLogger');
 /**
  * Health check utility for hot nodes
  * Verifies if a node is reachable and healthy
+ * Expected response format from hot node:
+ * {
+ *   "enabled": true,
+ *   "timestamp": "2026-01-14T10:30:00Z",
+ *   "disk_usage_percent": 45,
+ *   "bandwidth_24h": { "in_mb": 1250, "out_mb": 8900 },
+ *   "pins": { "total": 450, "pending_migration": 35, "overdue": 0 }
+ * }
  */
 
 const checkNodeHealth = async (node, timeout = 5000) => {
   try {
-    const healthUrl = `http://${node.url}/health`;
+    // Hot nodes will have their health endpoint at /health
+    const healthUrl = `${node.url}/health`;
     
     const response = await axios.get(healthUrl, {
       timeout: timeout,
       validateStatus: (status) => status === 200
     });
 
+    // Check if node is enabled and healthy
+    const data = response.data || {};
+    const isHealthy = data.enabled === true && 
+                     data.disk_usage_percent < 90 && 
+                     (data.pins?.overdue || 0) === 0;
+
     return {
-      healthy: true,
+      healthy: isHealthy,
       node: node,
-      responseTime: response.headers['x-response-time'] || 'N/A'
+      responseTime: response.headers['x-response-time'] || 'N/A',
+      details: {
+        enabled: data.enabled,
+        diskUsage: data.disk_usage_percent,
+        overdue: data.pins?.overdue || 0
+      }
     };
   } catch (error) {
-    // If health endpoint doesn't exist, try a simple HEAD request to the root
-    try {
-      await axios.head(`http://${node.url}`, { timeout: timeout });
-      return {
-        healthy: true,
-        node: node,
-        responseTime: 'N/A'
-      };
-    } catch (headError) {
-      return {
-        healthy: false,
-        node: node,
-        error: error.message
-      };
-    }
+    return {
+      healthy: false,
+      node: node,
+      error: error.message
+    };
   }
 };
 
 /**
  * Check multiple nodes and return only healthy ones
- * TEMPORARY: Simulating all nodes as healthy for testing round-robin
  */
 const filterHealthyNodes = async (nodes) => {
-  // TODO: Enable actual health checks when nodes have health endpoints
-  // For now, simulate all enabled nodes as healthy for testing
-  console.log('   [SIMULATION MODE] All enabled nodes marked as healthy');
+  if (nodes.length === 0) {
+    return [];
+  }
+
+  console.log(`🔍 Health checking ${nodes.length} hot nodes...`);
   
-  // Log simulated health check
-  activityLogger.logHealthCheck(nodes.length, nodes.length);
-  
-  return nodes;
-  
-  /* Uncomment below for actual health checking:
   const healthChecks = nodes.map(node => checkNodeHealth(node));
   const results = await Promise.all(healthChecks);
   
@@ -61,11 +66,12 @@ const filterHealthyNodes = async (nodes) => {
     .filter(result => result.healthy)
     .map(result => result.node);
 
-  // Log actual health check results
+  // Log health check results
   activityLogger.logHealthCheck(nodes.length, healthyNodes.length);
+  
+  console.log(`✅ ${healthyNodes.length}/${nodes.length} hot nodes healthy`);
 
   return healthyNodes;
-  */
 };
 
 module.exports = {

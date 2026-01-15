@@ -179,4 +179,43 @@ exports.apiDeleteNode = async (req, res) => {
   }
 };
 
+// API: Check node health manually
+exports.apiCheckNodeHealth = async (req, res) => {
+  try {
+    const { url } = req.body;
+
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        message: 'URL is required'
+      });
+    }
+
+    const { checkNodeHealth } = require('../utils/healthCheck');
+    const result = await checkNodeHealth({ url }, 5000);
+
+    activityLogger.logAdminAction('health-check', url, {
+      healthy: result.healthy,
+      details: result.details || {},
+      error: result.error || null
+    });
+
+    res.json({
+      success: true,
+      healthy: result.healthy,
+      details: result.details,
+      error: result.error,
+      responseTime: result.responseTime
+    });
+  } catch (error) {
+    console.error('Error checking node health:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message,
+      healthy: false
+    });
+  }
+};
+
 module.exports = exports;

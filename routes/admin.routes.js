@@ -24,5 +24,6 @@ router.get('/', (req, res) => {
 router.post('/api/node', requireAdminAuth, adminController.apiCreateOrUpdateNode);
 router.put('/api/node/:owner', requireAdminAuth, adminController.apiUpdateNode);
 router.delete('/api/node/:owner', requireAdminAuth, adminController.apiDeleteNode);
+router.post('/api/check-health', requireAdminAuth, adminController.apiCheckNodeHealth);
 
 module.exports = router;
