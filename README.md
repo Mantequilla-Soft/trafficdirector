@@ -45,11 +45,11 @@ The server will start on the PORT specified in your .env file (default: 3000).
 
 ### Public Endpoints
 
-#### Get Random Hot Node (for Encoders)
+#### Get Hot Node (for Encoders)
 ```
-GET /api/director/random
+GET /api/hotnode
 ```
-Returns a random healthy and enabled hot node URL for encoder uploads.
+Returns a healthy hot node using round-robin distribution. Response includes upload endpoint, health endpoint, name, and owner. Rate limited to 30 requests per hour per IP.
 
 #### Health Check
 ```
