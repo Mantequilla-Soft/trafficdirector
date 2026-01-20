@@ -23,7 +23,7 @@ exports.getHotNode = async (req, res) => {
     if (enabledNodes.length > 0) {
       console.log('   Enabled nodes:');
       enabledNodes.forEach((node, index) => {
-        console.log(`   ${index + 1}. ${node.owner} (${node.url}) - Last used: ${node.lastUsed}`);
+        console.log(`   ${index + 1}. ${node.owner} (${node.uploadEndpoint}) - Last used: ${node.lastUsed}`);
       });
     }
 
@@ -45,7 +45,7 @@ exports.getHotNode = async (req, res) => {
     if (healthyNodes.length > 0) {
       console.log('   Healthy nodes:');
       healthyNodes.forEach((node, index) => {
-        console.log(`   ${index + 1}. ${node.owner} (${node.url})`);
+        console.log(`   ${index + 1}. ${node.owner} (${node.uploadEndpoint})`);
       });
     }
 
@@ -65,7 +65,7 @@ exports.getHotNode = async (req, res) => {
 
     console.log(`\n🎯 Round-robin selection:`);
     console.log(`   Index: ${selectedIndex} of ${healthyNodes.length - 1}`);
-    console.log(`   Selected: ${selectedNode.owner} (${selectedNode.url})`);
+    console.log(`   Selected: ${selectedNode.owner} (${selectedNode.uploadEndpoint})`);
     console.log(`   Next index will be: ${roundRobinIndex}`);
 
     // Update last used timestamp
@@ -80,8 +80,8 @@ exports.getHotNode = async (req, res) => {
       success: true,
       data: {
         name: selectedNode.name,
-        url: selectedNode.url,
-        ip: selectedNode.ip,
+        uploadEndpoint: selectedNode.uploadEndpoint,
+        healthEndpoint: selectedNode.healthEndpoint,
         owner: selectedNode.owner
       }
     };
@@ -89,8 +89,8 @@ exports.getHotNode = async (req, res) => {
     console.log('\n✅ Responding with hot node:');
     console.log(`   Owner: ${selectedNode.owner}`);
     console.log(`   Name: ${selectedNode.name}`);
-    console.log(`   URL: ${selectedNode.url}`);
-    console.log(`   IP: ${selectedNode.ip}`);
+    console.log(`   Upload Endpoint: ${selectedNode.uploadEndpoint}`);
+    console.log(`   Health Endpoint: ${selectedNode.healthEndpoint}`);
     console.log('=================================================\n');
 
     res.status(200).json(responseData);
@@ -132,10 +132,10 @@ exports.getNodeByOwner = async (req, res) => {
     res.status(200).json({
       success: true,
       data: {
-        url: node.url,
+        uploadEndpoint: node.uploadEndpoint,
+        healthEndpoint: node.healthEndpoint,
         owner: node.owner,
-        name: node.name,
-        ip: node.ip
+        name: node.name
       }
     });
   } catch (error) {

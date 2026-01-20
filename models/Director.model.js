@@ -10,13 +10,27 @@ const hotNodeSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  ip: {
+  uploadEndpoint: {
     type: String,
-    required: true
+    required: true,
+    // Example: https://hotipfs-1.3speak.tv/api/v0/add
+    validate: {
+      validator: function(v) {
+        return /^https?:\/\/.+/.test(v);
+      },
+      message: 'uploadEndpoint must be a valid URL'
+    }
   },
-  url: {
+  healthEndpoint: {
     type: String,
-    required: true
+    required: true,
+    // Example: https://hotipfs-1.3speak.tv/health
+    validate: {
+      validator: function(v) {
+        return /^https?:\/\/.+/.test(v);
+      },
+      message: 'healthEndpoint must be a valid URL'
+    }
   },
   comments: {
     type: String,

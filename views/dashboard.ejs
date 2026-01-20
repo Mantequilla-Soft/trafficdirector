@@ -334,8 +334,8 @@
                     <tr>
                         <th>Owner</th>
                         <th>Name</th>
-                        <th>IP</th>
-                        <th>URL</th>
+                        <th>Upload Endpoint</th>
+                        <th>Health Endpoint</th>
                         <th>Status</th>
                         <th>Last Used</th>
                         <th>Actions</th>
@@ -346,8 +346,8 @@
                         <tr>
                             <td><strong><%= node.owner %></strong></td>
                             <td><%= node.name %></td>
-                            <td><%= node.ip %></td>
-                            <td><%= node.url %></td>
+                            <td><code><%= node.uploadEndpoint %></code></td>
+                            <td><code><%= node.healthEndpoint %></code></td>
                             <td>
                                 <span class="status-badge <%= node.enabled ? 'status-enabled' : 'status-disabled' %>">
                                     <%= node.enabled ? 'Enabled' : 'Disabled' %>
@@ -356,7 +356,7 @@
                             <td><%= new Date(node.lastUsed).toLocaleString() %></td>
                             <td>
                                 <div class="btn-group">
-                                    <button class="btn btn-health" onclick="checkNodeHealth('<%= node.url %>', this)">
+                                    <button class="btn btn-health" onclick="checkNodeHealth('<%= node.healthEndpoint %>', this)">
                                         Check Health
                                     </button>
                                     <button class="btn btn-edit" data-node="<%= encodeURIComponent(JSON.stringify(node)) %>" onclick="openEditModalFromData(this)">Edit</button>
@@ -405,13 +405,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="ip">IP Address *</label>
-                    <input type="text" id="ip" name="ip" required>
+                    <label for="uploadEndpoint">Upload Endpoint *</label>
+                    <input type="text" id="uploadEndpoint" name="uploadEndpoint" required placeholder="https://hotipfs-1.3speak.tv/api/v0/add">
+                    <small>Full URL including protocol and path</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="url">URL *</label>
-                    <input type="text" id="url" name="url" required placeholder="example.3speak.tv">
+                    <label for="healthEndpoint">Health Endpoint *</label>
+                    <input type="text" id="healthEndpoint" name="healthEndpoint" required placeholder="https://hotipfs-1.3speak.tv/health">
+                    <small>Full URL including protocol and path</small>
                 </div>
                 
                 <div class="form-group">
@@ -453,8 +455,8 @@
             document.getElementById('originalOwner').value = node.owner;
             document.getElementById('owner').value = node.owner;
             document.getElementById('name').value = node.name;
-            document.getElementById('ip').value = node.ip;
-            document.getElementById('url').value = node.url;
+            document.getElementById('uploadEndpoint').value = node.uploadEndpoint;
+            document.getElementById('healthEndpoint').value = node.healthEndpoint;
             document.getElementById('comments').value = node.comments || '';
             document.getElementById('enabled').checked = node.enabled;
             document.getElementById('nodeModal').classList.add('active');
@@ -476,8 +478,8 @@
             const data = {
                 owner: formData.get('owner'),
                 name: formData.get('name'),
-                ip: formData.get('ip'),
-                url: formData.get('url'),
+                uploadEndpoint: formData.get('uploadEndpoint'),
+                healthEndpoint: formData.get('healthEndpoint'),
                 comments: formData.get('comments'),
                 enabled: formData.get('enabled') === 'on'
             };
@@ -539,7 +541,7 @@
             }
         }
 
-        async function checkNodeHealth(nodeUrl, buttonElement) {
+        async function checkNodeHealth(healthEndpoint, buttonElement) {
             const originalText = buttonElement.textContent;
             buttonElement.textContent = 'Checking...';
             buttonElement.disabled = true;
@@ -554,7 +556,7 @@
                 const response = await fetch('/admin/api/check-health', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: nodeUrl })
+                    body: JSON.stringify({ healthEndpoint: healthEndpoint })
                 });
 
                 const result = await response.json();

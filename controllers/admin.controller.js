@@ -46,12 +46,16 @@ exports.showDashboard = async (req, res) => {
 // API: Create or update node
 exports.apiCreateOrUpdateNode = async (req, res) => {
   try {
-    const { owner, name, ip, url, comments, enabled } = req.body;
+    console.log('\n=== CREATE/UPDATE NODE REQUEST ===');
+    console.log('Full request body:', JSON.stringify(req.body, null, 2));
+    console.log('===================================\n');
+    
+    const { owner, name, uploadEndpoint, healthEndpoint, comments, enabled } = req.body;
 
-    if (!owner || !name || !ip || !url) {
+    if (!owner || !name || !uploadEndpoint || !healthEndpoint) {
       return res.status(400).json({
         success: false,
-        message: 'Owner, name, ip, and url are required'
+        message: 'Owner, name, uploadEndpoint, and healthEndpoint are required'
       });
     }
 
@@ -60,8 +64,8 @@ exports.apiCreateOrUpdateNode = async (req, res) => {
       {
         owner,
         name,
-        ip,
-        url,
+        uploadEndpoint,
+        healthEndpoint,
         comments: comments || '',
         enabled: enabled !== undefined ? enabled : true,
         lastUsed: new Date()
@@ -76,7 +80,7 @@ exports.apiCreateOrUpdateNode = async (req, res) => {
 
     // Log activity
     const action = node.isNew ? 'create' : 'update';
-    activityLogger.logAdminAction(action, owner, { name, url });
+    activityLogger.logAdminAction(action, owner, { name, uploadEndpoint });
 
     res.json({
       success: true,
@@ -126,8 +130,8 @@ exports.apiUpdateNode = async (req, res) => {
     console.log('📋 Verification - Fresh from DB:');
     console.log('  Owner:', verifyNode.owner);
     console.log('  Name:', verifyNode.name);
-    console.log('  IP:', verifyNode.ip);
-    console.log('  URL:', verifyNode.url);
+    console.log('  Upload Endpoint:', verifyNode.uploadEndpoint);
+    console.log('  Health Endpoint:', verifyNode.healthEndpoint);
     console.log('  Enabled:', verifyNode.enabled);
     console.log('===========================\n');
 
@@ -182,32 +186,32 @@ exports.apiDeleteNode = async (req, res) => {
 // API: Check node health manually
 exports.apiCheckNodeHealth = async (req, res) => {
   try {
-    const { url } = req.body;
+    const { healthEndpoint } = req.body;
 
-    if (!url) {
+    if (!healthEndpoint) {
       return res.status(400).json({
         success: false,
-        message: 'URL is required'
+        message: 'healthEndpoint is required'
       });
     }
 
     const { checkNodeHealth } = require('../utils/healthCheck');
-    const result = await checkNodeHealth({ url }, 5000);
+    const result = await checkNodeHealth({ healthEndpoint }, 5000);
 
     // Log to console
     if (result.healthy) {
-      console.log(`✅ Manual health check: ${url} - Healthy`);
+      console.log(`✅ Manual health check: ${healthEndpoint} - Healthy`);
     } else {
-      console.log(`❌ Manual health check: ${url} - Unhealthy (${result.errorType || 'error'}): ${result.error}`);
+      console.log(`❌ Manual health check: ${healthEndpoint} - Unhealthy (${result.errorType || 'error'}): ${result.error}`);
     }
 
     // Log to activity logger with proper message
     const statusMsg = result.healthy ? 
-      `Health check PASSED for ${url}` : 
-      `Health check FAILED for ${url}: ${result.errorType || 'error'} - ${result.error}`;
+      `Health check PASSED for ${healthEndpoint}` : 
+      `Health check FAILED for ${healthEndpoint}: ${result.errorType || 'error'} - ${result.error}`;
     
     activityLogger.logAdminAction('health-check', statusMsg, {
-      url: url,
+      healthEndpoint: healthEndpoint,
       healthy: result.healthy,
       details: result.details || {},
       error: result.error || null,

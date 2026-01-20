@@ -16,8 +16,8 @@ const activityLogger = require('./activityLogger');
 
 const checkNodeHealth = async (node, timeout = 5000) => {
   try {
-    // Hot nodes will have their health endpoint at /health
-    const healthUrl = `${node.url}/health`;
+    // Use the explicit health endpoint stored in the database
+    const healthUrl = node.healthEndpoint;
     
     const response = await axios.get(healthUrl, {
       timeout: timeout,
@@ -75,7 +75,7 @@ const filterHealthyNodes = async (nodes) => {
       healthyNodes.push(result.node);
     } else {
       unhealthyNodes.push(result);
-      console.log(`❌ Node unhealthy: ${result.node.name || result.node.url} - ${result.errorType || 'failed'}: ${result.error}`);
+      console.log(`❌ Node unhealthy: ${result.node.name || result.node.uploadEndpoint} - ${result.errorType || 'failed'}: ${result.error}`);
     }
   });
 
