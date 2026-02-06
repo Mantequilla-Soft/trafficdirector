@@ -26,14 +26,23 @@ const checkNodeHealth = async (node, timeout = 5000) => {
 
     // Check if node is enabled and healthy
     const data = response.data || {};
+    const overduePins = data.pins?.overdue || 0;
     const isHealthy = data.enabled === true && 
                      data.disk_usage_percent < 90 && 
-                     (data.pins?.overdue || 0) === 0;
+                     overduePins < 150; // Allow some overdue pins (less than 150)
+
+    // Build health failure reasons if not healthy
+    const failureReasons = [];
+    if (data.enabled !== true) failureReasons.push('disabled');
+    if (data.disk_usage_percent >= 90) failureReasons.push(`high disk usage (${data.disk_usage_percent}%)`);
+    if (overduePins >= 150) failureReasons.push(`too many overdue pins (${overduePins})`);
 
     return {
       healthy: isHealthy,
       node: node,
       responseTime: response.headers['x-response-time'] || 'N/A',
+      error: !isHealthy && failureReasons.length > 0 ? failureReasons.join(', ') : undefined,
+      errorType: !isHealthy && failureReasons.length > 0 ? 'health_criteria_failed' : undefined,
       details: {
         enabled: data.enabled,
         diskUsage: data.disk_usage_percent,
