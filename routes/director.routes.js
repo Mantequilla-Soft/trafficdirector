@@ -21,7 +21,4 @@ router.post('/node', authenticateRequest, directorController.createOrUpdateNode)
 // Update existing hot node by owner
 router.put('/node/:owner', authenticateRequest, directorController.updateNode);
 
-// Make external API call with axios
-router.post('/external-call', directorController.makeExternalCall);
-
 module.exports = router;

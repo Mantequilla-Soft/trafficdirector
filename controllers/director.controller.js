@@ -1,5 +1,4 @@
 const HotNode = require('../models/Director.model');
-const axios = require('axios');
 const { filterHealthyNodes } = require('../utils/healthCheck');
 const activityLogger = require('../utils/activityLogger');
 
@@ -178,34 +177,6 @@ exports.createNode = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
-    });
-  }
-};
-
-// Make external API call with axios (example)
-exports.makeExternalCall = async (req, res) => {
-  try {
-    const { url, payload } = req.body;
-
-    if (!url) {
-      return res.status(400).json({
-        success: false,
-        message: 'URL is required'
-      });
-    }
-
-    const response = await axios.post(url, payload);
-
-    res.status(200).json({
-      success: true,
-      data: response.data
-    });
-  } catch (error) {
-    console.error('Error making external call:', error);
-    res.status(500).json({
-      success: false,
-      message: 'External API call failed',
       error: error.message
     });
   }
