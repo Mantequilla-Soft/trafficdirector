@@ -24,18 +24,19 @@ const checkNodeHealth = async (node, timeout = 5000) => {
       validateStatus: (status) => status === 200
     });
 
-    // Check if node is enabled and healthy
+    // Check if node is enabled and healthy.
+    // Overdue pins are deliberately NOT a criterion: a migration backlog
+    // means the supernode is slow, not that this node can't take uploads.
+    // Pulling the node out of rotation for it only stops ingestion; disk
+    // headroom is the real limit, and the hot node alerts on the backlog itself.
     const data = response.data || {};
-    const overduePins = data.pins?.overdue || 0;
-    const isHealthy = data.enabled === true && 
-                     data.disk_usage_percent < 90 && 
-                     overduePins < 150; // Allow some overdue pins (less than 150)
+    const isHealthy = data.enabled === true &&
+                     data.disk_usage_percent < 90;
 
     // Build health failure reasons if not healthy
     const failureReasons = [];
     if (data.enabled !== true) failureReasons.push('disabled');
     if (data.disk_usage_percent >= 90) failureReasons.push(`high disk usage (${data.disk_usage_percent}%)`);
-    if (overduePins >= 150) failureReasons.push(`too many overdue pins (${overduePins})`);
 
     return {
       healthy: isHealthy,
